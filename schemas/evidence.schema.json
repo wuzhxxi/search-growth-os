@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"Evidence","type":"object","required":["state","source","observed_at","notes"],"properties":{"state":{"enum":["VERIFIED","PROVIDED","OBSERVED","INFERRED","HYPOTHESIS","UNKNOWN"]},"source":{"type":"string"},"observed_at":{"type":["string","null"]},"notes":{"type":"string"}},"additionalProperties":false}
