@@ -1,0 +1,10 @@
+{
+  "version": "0.1.0",
+  "agents": [
+    {"id":"aeo","name":"Google AEO 基础架构师","path":"agents/aeo-foundations.md","role":"technical-access","responsibilities":["crawl","index","render","logs"],"handoff_targets":["seo","geo","agentic"],"eval_path":"evals/aeo.md","status":"active"},
+    {"id":"seo","name":"Google SEO 增长专家","path":"agents/seo-specialist.md","role":"search-growth","responsibilities":["demand","intent","content","conversion"],"handoff_targets":["aeo","geo","orchestrator"],"eval_path":"evals/seo.md","status":"active"},
+    {"id":"geo","name":"Google AI 搜索可见性策略师","path":"agents/geo-strategist.md","role":"ai-search-visibility","responsibilities":["mention","recommendation","citation","sources"],"handoff_targets":["aeo","seo","orchestrator"],"eval_path":"evals/geo.md","status":"active"},
+    {"id":"agentic","name":"搜索任务完成优化师","path":"agents/agentic-search-optimizer.md","role":"task-completion","responsibilities":["discoverability","execution","postcondition","safety"],"handoff_targets":["aeo","orchestrator"],"eval_path":"evals/agentic.md","status":"active"},
+    {"id":"orchestrator","name":"Search Growth Orchestrator","path":"agents/orchestrator.md","role":"orchestration","responsibilities":["routing","normalization","prioritization","roadmap"],"handoff_targets":["aeo","seo","geo","agentic"],"eval_path":null,"status":"active"}
+  ]
+}
