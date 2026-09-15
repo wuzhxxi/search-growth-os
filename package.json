@@ -1,0 +1,14 @@
+{
+  "name": "search-growth-os",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Google-first Search Growth OS for SEO, AEO, GEO and agentic search.",
+  "scripts": {
+    "test": "node --test",
+    "validate": "node scripts/search-growth.mjs validate",
+    "agents": "node scripts/search-growth.mjs agents list",
+    "evals": "node scripts/search-growth.mjs evals list"
+  },
+  "engines": { "node": ">=22" }
+}
