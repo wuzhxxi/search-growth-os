@@ -1,0 +1,10 @@
+{
+  "version": "0.1.0",
+  "status": "pending",
+  "suites": [
+    {"agent":"aeo","path":"evals/aeo.md","case_count":4,"execution":"human-or-llm","status":"pending"},
+    {"agent":"seo","path":"evals/seo.md","case_count":4,"execution":"human-or-llm","status":"pending"},
+    {"agent":"geo","path":"evals/geo.md","case_count":4,"execution":"human-or-llm","status":"pending"},
+    {"agent":"agentic","path":"evals/agentic.md","case_count":4,"execution":"human-or-llm","status":"pending"}
+  ]
+}
