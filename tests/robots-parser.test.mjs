@@ -49,6 +49,85 @@ test("robots evaluation selects the most specific rule and lets Allow win a tie"
   assert.match(exact.caution, /does not guarantee/i);
 });
 
+test("robots product-token matching rejects arbitrary substrings and falls back to wildcard", () => {
+  const parsed = parseRobotsTxt(`
+    User-agent: bot
+    Disallow: /substring-only
+
+    User-agent: *
+    Disallow: /wildcard-only
+  `);
+
+  const substringPath = evaluateRobotsPolicy(parsed, "Googlebot", "/substring-only");
+  const wildcardPath = evaluateRobotsPolicy(parsed, "Googlebot", "/wildcard-only");
+
+  assert.equal(substringPath.allowed, true);
+  assert.equal(wildcardPath.allowed, false);
+  assert.deepEqual(wildcardPath.matched_group_indexes, [1]);
+});
+
+test("robots product-token matching is case-insensitive and combines duplicate exact groups", () => {
+  const parsed = parseRobotsTxt(`
+    User-agent: googlebot
+    Disallow: /lowercase
+
+    User-agent: *
+    Disallow: /wildcard
+
+    User-agent: GoogleBot
+    Disallow: /mixed-case
+  `);
+
+  const lowercaseRule = evaluateRobotsPolicy(parsed, "Googlebot", "/lowercase");
+  const mixedCaseRule = evaluateRobotsPolicy(parsed, "Googlebot", "/mixed-case");
+  const wildcardRule = evaluateRobotsPolicy(parsed, "Googlebot", "/wildcard");
+
+  assert.equal(lowercaseRule.allowed, false);
+  assert.equal(mixedCaseRule.allowed, false);
+  assert.equal(wildcardRule.allowed, true);
+  assert.deepEqual(lowercaseRule.matched_group_indexes, [0, 2]);
+  assert.deepEqual(mixedCaseRule.matched_group_indexes, [0, 2]);
+});
+
+test("Googlebot and Googlebot-News product tokens are not conflated", () => {
+  const parsed = parseRobotsTxt(`
+    User-agent: Googlebot
+    Disallow: /web-only
+
+    User-agent: Googlebot-News
+    Disallow: /news-only
+
+    User-agent: *
+    Disallow: /wildcard-only
+  `);
+
+  const webOnNewsPath = evaluateRobotsPolicy(parsed, "Googlebot", "/news-only");
+  const newsOnWebPath = evaluateRobotsPolicy(parsed, "Googlebot-News", "/web-only");
+  const newsOnNewsPath = evaluateRobotsPolicy(parsed, "Googlebot-News", "/news-only");
+
+  assert.equal(webOnNewsPath.allowed, true);
+  assert.deepEqual(webOnNewsPath.matched_group_indexes, [0]);
+  assert.equal(newsOnWebPath.allowed, true);
+  assert.equal(newsOnNewsPath.allowed, false);
+  assert.deepEqual(newsOnNewsPath.matched_group_indexes, [1]);
+});
+
+test("robots wildcard remains the fallback when no exact product-token group exists", () => {
+  const parsed = parseRobotsTxt(`
+    User-agent: Googlebot
+    Disallow: /google-only
+
+    User-agent: *
+    Disallow: /fallback
+  `);
+
+  const evaluation = evaluateRobotsPolicy(parsed, "UnregisteredBot", "/fallback");
+
+  assert.equal(evaluation.allowed, false);
+  assert.deepEqual(evaluation.matched_group_indexes, [1]);
+  assert.equal(evaluation.matched_rule.path, "/fallback");
+});
+
 test("Googlebot Smartphone is evaluated with the Googlebot robots token", () => {
   const parsed = parseRobotsTxt(`
     User-agent: Googlebot
