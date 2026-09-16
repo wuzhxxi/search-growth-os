@@ -1,12 +1,20 @@
 {
   "name": "search-growth-os",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Google-first Search Growth OS for SEO, AEO, GEO and agentic search.",
+  "bin": {
+    "search-growth": "scripts/search-growth.mjs"
+  },
   "scripts": {
     "test": "node --test",
+    "test:phase1": "node --test tests/search-growth.test.mjs",
+    "test:adapters": "node --test tests/http-adapter.test.mjs tests/robots-parser.test.mjs tests/robots-adapter.test.mjs tests/sitemap-parser.test.mjs tests/sitemap-adapter.test.mjs tests/audit-findings.test.mjs tests/audit-run.test.mjs tests/technical-audit.integration.test.mjs",
+    "test:crawler": "node --test tests/crawler.test.mjs",
+    "test:security": "node --test tests/http-security.test.mjs tests/cli-audit.test.mjs",
     "validate": "node scripts/search-growth.mjs validate",
+    "regressions": "node scripts/search-growth.mjs regressions check",
     "agents": "node scripts/search-growth.mjs agents list",
     "evals": "node scripts/search-growth.mjs evals list"
   },

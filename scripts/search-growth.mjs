@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { formatAuditRun } from "../lib/audit/format.mjs";
+import { runAudit } from "../lib/audit/default-runner.mjs";
+import {
+  AUDIT_OPTION_HELP,
+  parseAuditOptions,
+} from "../lib/cli/audit-options.mjs";
+import { sanitizeTextForRecord } from "../lib/security/record-sanitizer.mjs";
 
 const root=process.cwd();
 const read=p=>fs.readFileSync(path.join(root,p),"utf8");
@@ -8,6 +15,7 @@ const exists=p=>fs.existsSync(path.join(root,p));
 const registry=()=>JSON.parse(read("search-growth/registry.json"));
 
 function frontmatter(text){
+  text=text.replace(/\r\n?/g,"\n");
   if(!text.startsWith("---\n")) throw new Error("missing frontmatter");
   const end=text.indexOf("\n---\n",4); if(end<0) throw new Error("unterminated frontmatter");
   const obj={};
@@ -48,13 +56,51 @@ function validateEvals(){
 }
 function report(label,errors){if(errors.length){console.error(`FAIL ${label}`);for(const e of errors)console.error(`- ${e}`);return 1;}console.log(`PASS ${label}`);return 0;}
 
-const [group,action]=process.argv.slice(2);let code=0;
-if(group==="agents"&&action==="list") for(const a of registry().agents) console.log(`${a.id}\t${a.name}\t${a.path}`);
-else if(group==="agents"&&action==="validate") code=report("agents",validateAgents());
-else if(group==="schemas"&&action==="validate") code=report("schemas",validateSchemas());
-else if(group==="regressions"&&action==="check") code=report("regressions",regressionCheck());
-else if(group==="evals"&&action==="list") for(const s of JSON.parse(read("evals/manifest.json")).suites) console.log(`${s.agent}\t${s.case_count}\t${s.status}\t${s.path}`);
-else if(group==="evals"&&action==="validate") code=report("evals",validateEvals());
-else if(group==="validate"){code|=report("agents",validateAgents());code|=report("schemas",validateSchemas());code|=report("regressions",regressionCheck());code|=report("evals",validateEvals());}
-else console.log("Commands: agents list|validate; schemas validate; regressions check; evals list|validate; validate");
-process.exitCode=code?1:0;
+function printHelp(){
+  console.log([
+    "Search Growth OS commands:",
+    "  search-growth validate",
+    "  search-growth agents list|validate",
+    "  search-growth schemas validate",
+    "  search-growth regressions check",
+    "  search-growth evals list|validate",
+    "  search-growth audit technical <URL> [options]",
+    "  search-growth audit robots <URL> [options]",
+    "  search-growth audit sitemap <URL> [options]",
+    "  search-growth crawl <URL> [options]",
+    "",
+    "Technical audit options:",
+    ...AUDIT_OPTION_HELP.map(line=>`  ${line}`),
+  ].join("\n"));
+}
+
+async function executeAudit(kind,args){
+  const parsed=parseAuditOptions(args);
+  if(parsed.help){printHelp();return 0;}
+  if(parsed.positionals.length!==1) throw new TypeError(`${kind} requires exactly one target URL`);
+  const result=await runAudit(kind,parsed.positionals[0],parsed.configuration);
+  process.stdout.write(parsed.json?`${JSON.stringify(result,null,2)}\n`:formatAuditRun(result));
+  return ["invalid","blocked","timeout","unavailable","UNKNOWN"].includes(result.summary.status)?2:0;
+}
+
+const args=process.argv.slice(2);
+const [group,action]=args;
+let code=0;
+try{
+  if(group==="agents"&&action==="list") for(const a of registry().agents) console.log(`${a.id}\t${a.name}\t${a.path}`);
+  else if(group==="agents"&&action==="validate") code=report("agents",validateAgents());
+  else if(group==="schemas"&&action==="validate") code=report("schemas",validateSchemas());
+  else if(group==="regressions"&&action==="check") code=report("regressions",regressionCheck());
+  else if(group==="evals"&&action==="list") for(const s of JSON.parse(read("evals/manifest.json")).suites) console.log(`${s.agent}\t${s.case_count}\t${s.status}\t${s.path}`);
+  else if(group==="evals"&&action==="validate") code=report("evals",validateEvals());
+  else if(group==="validate"){code|=report("agents",validateAgents());code|=report("schemas",validateSchemas());code|=report("regressions",regressionCheck());code|=report("evals",validateEvals());}
+  else if(group==="audit"&&["help","--help","-h"].includes(action)){printHelp();}
+  else if(group==="audit"&&["technical","robots","sitemap"].includes(action)) code=await executeAudit(action,args.slice(2));
+  else if(group==="crawl") code=await executeAudit("crawl",args.slice(1));
+  else if(!group||group==="help"||group==="--help"||group==="-h") printHelp();
+  else {console.error(`Unknown command: ${args.map(sanitizeTextForRecord).join(" ")}`);printHelp();code=1;}
+}catch(error){
+  console.error(`ERROR ${sanitizeTextForRecord(error?.message??String(error))}`);
+  code=1;
+}
+process.exitCode=code;
