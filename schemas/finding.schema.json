@@ -1,1 +1,38 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"Finding","type":"object","required":["id","title","agent","evidence","business_impact","confidence","effort","affected_assets","recommendation","validation_method"],"properties":{"id":{"type":"string"},"title":{"type":"string"},"agent":{"type":"string"},"evidence":{"type":"array"},"business_impact":{"type":"string"},"confidence":{"enum":["low","medium","high"]},"effort":{"enum":["low","medium","high"]},"affected_assets":{"type":"array"},"recommendation":{"type":"string"},"validation_method":{"type":"string"}},"additionalProperties":false}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Finding",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "agent",
+    "evidence",
+    "business_impact",
+    "confidence",
+    "effort",
+    "affected_assets",
+    "recommendation",
+    "validation_method"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "agent": { "type": "string", "minLength": 1 },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "evidence.schema.json" },
+      "minItems": 1
+    },
+    "business_impact": { "type": "string", "minLength": 1 },
+    "confidence": { "enum": ["low", "medium", "high"] },
+    "effort": { "enum": ["low", "medium", "high"] },
+    "affected_assets": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "recommendation": { "type": "string", "minLength": 1 },
+    "validation_method": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

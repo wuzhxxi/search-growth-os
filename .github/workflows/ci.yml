@@ -13,5 +13,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm test
-      - run: npm run validate
+      - name: Existing Phase 1 tests
+        run: npm run test:phase1
+      - name: Existing validation
+        run: npm run validate
+      - name: Existing regression guardrails
+        run: npm run regressions
+      - name: Adapter and Audit Run tests
+        run: npm run test:adapters
+      - name: Bounded crawler tests
+        run: npm run test:crawler
+      - name: Security boundary tests
+        run: npm run test:security
+      - name: Full offline test suite
+        run: npm test

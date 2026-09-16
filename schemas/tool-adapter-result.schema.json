@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ToolAdapterResult",
+  "description": "Common envelope returned by the HTTP, robots, sitemap, and bounded crawler adapters.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "version",
+    "capabilities",
+    "input",
+    "output",
+    "evidence",
+    "observed_at",
+    "status",
+    "errors"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "input": {
+      "type": "object",
+      "description": "The normalized, JSON-serializable input recorded by the adapter."
+    },
+    "output": {
+      "type": ["object", "null"],
+      "description": "Structured adapter output, or null when no output could be produced."
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "evidence.schema.json" }
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "enum": ["ok", "partial", "UNKNOWN", "unavailable", "timeout", "blocked", "invalid"]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "status": {
+            "enum": ["UNKNOWN", "unavailable", "timeout", "blocked", "invalid"]
+          },
+          "details": {
+            "type": ["object", "null"],
+            "description": "Adapter-specific structured context. Its nested keys are intentionally domain-specific."
+          },
+          "url": { "type": "string" },
+          "stage": { "type": "string", "minLength": 1 },
+          "crawl_depth": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AuditRun",
+  "description": "A timestamped technical audit with adapter provenance, normalized evidence, findings, and errors.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "kind",
+    "timestamp",
+    "target",
+    "configuration",
+    "adapter_versions",
+    "tool_results",
+    "evidence",
+    "findings",
+    "errors",
+    "summary"
+  ],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["technical", "robots", "sitemap", "crawl"] },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "target": { "type": "string", "minLength": 1 },
+    "configuration": { "type": "object" },
+    "adapter_versions": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "tool_results": {
+      "type": "array",
+      "items": { "$ref": "tool-adapter-result.schema.json" }
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "evidence.schema.json" }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "finding.schema.json" }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "adapter": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["status", "evidence_count", "finding_count", "error_count"],
+      "properties": {
+        "status": {
+          "enum": ["ok", "partial", "UNKNOWN", "unavailable", "timeout", "blocked", "invalid"]
+        },
+        "evidence_count": { "type": "integer", "minimum": 0 },
+        "finding_count": { "type": "integer", "minimum": 0 },
+        "error_count": { "type": "integer", "minimum": 0 },
+        "pages_crawled": { "type": "integer", "minimum": 0 },
+        "sitemaps_checked": { "type": "integer", "minimum": 0 },
+        "request_budget": {
+          "type": "object",
+          "required": [
+            "max_requests",
+            "max_response_bytes",
+            "max_duration_ms",
+            "requests_used",
+            "response_bytes_used",
+            "exhausted",
+            "exhaustion_code"
+          ],
+          "properties": {
+            "max_requests": { "type": "integer", "minimum": 1 },
+            "max_response_bytes": { "type": "integer", "minimum": 1 },
+            "max_duration_ms": { "type": "integer", "minimum": 1 },
+            "requests_used": { "type": "integer", "minimum": 0 },
+            "response_bytes_used": { "type": "integer", "minimum": 0 },
+            "exhausted": { "type": "boolean" },
+            "exhaustion_code": { "type": ["string", "null"] }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

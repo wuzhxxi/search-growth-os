@@ -1,0 +1,96 @@
+{
+  "version": "2026-09-16",
+  "last_verified": "2026-09-16",
+  "notes": [
+    "Crawler names, purposes, and robots.txt behavior are mutable platform facts. Recheck every source against current official documentation before a real audit.",
+    "A robots.txt Allow result is only a path-access rule result. It does not guarantee crawling, indexing, ranking, inclusion in an answer, or citation.",
+    "GPTBot is documented for potential foundation-model training; it is not treated as the ChatGPT Search crawler. OAI-SearchBot is evaluated separately for ChatGPT Search.",
+    "Google-Extended is intentionally not represented as a Google Search indexing control."
+  ],
+  "crawlers": [
+    {
+      "crawler": "Googlebot",
+      "robots_token": "Googlebot",
+      "purpose": "Generic crawler product token used by Google Search for its smartphone and desktop crawlers.",
+      "source": "https://developers.google.com/search/docs/crawling-indexing/googlebot",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "applies"
+    },
+    {
+      "crawler": "Googlebot Smartphone",
+      "robots_token": "Googlebot",
+      "purpose": "Google Search mobile crawler; official documentation says it obeys the same Googlebot robots.txt product token as the desktop crawler.",
+      "source": "https://developers.google.com/search/docs/crawling-indexing/googlebot",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "applies",
+      "notes": "Do not evaluate this as a separate Googlebot-Smartphone robots.txt token."
+    },
+    {
+      "crawler": "OAI-SearchBot",
+      "robots_token": "OAI-SearchBot",
+      "purpose": "Automatic crawler used to surface websites in ChatGPT search features.",
+      "source": "https://developers.openai.com/api/docs/bots",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "applies"
+    },
+    {
+      "crawler": "GPTBot",
+      "robots_token": "GPTBot",
+      "purpose": "Crawler for content that may be used to make OpenAI generative AI foundation models more useful and safe, including potential training use.",
+      "source": "https://developers.openai.com/api/docs/bots",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "applies",
+      "notes": "GPTBot is not the ChatGPT Search crawler; evaluate OAI-SearchBot separately."
+    },
+    {
+      "crawler": "ChatGPT-User",
+      "robots_token": "ChatGPT-User",
+      "purpose": "User-initiated web fetches for certain actions in ChatGPT and Custom GPTs; not an automatic web crawler and not the Search inclusion control.",
+      "source": "https://developers.openai.com/api/docs/bots",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "may_not_apply",
+      "notes": "Official documentation says robots.txt rules may not apply to these user-initiated requests."
+    },
+    {
+      "crawler": "Claude-SearchBot",
+      "robots_token": "Claude-SearchBot",
+      "purpose": "Crawler used by Anthropic to navigate and analyze web content to improve search result quality.",
+      "source": "https://privacy.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "applies"
+    },
+    {
+      "crawler": "ClaudeBot",
+      "robots_token": "ClaudeBot",
+      "purpose": "Crawler for public web content that could potentially contribute to Anthropic model training.",
+      "source": "https://privacy.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "applies"
+    },
+    {
+      "crawler": "Claude-User",
+      "robots_token": "Claude-User",
+      "purpose": "Retrieves web content at a Claude user's direction in response to a user query.",
+      "source": "https://privacy.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "applies"
+    },
+    {
+      "crawler": "PerplexityBot",
+      "robots_token": "PerplexityBot",
+      "purpose": "Crawler designed to surface and link websites in Perplexity search results; official documentation says it is not used to crawl for foundation-model training.",
+      "source": "https://docs.perplexity.ai/docs/resources/perplexity-crawlers",
+      "last_verified": "2026-09-16",
+      "status": "documented",
+      "robots_policy_applicability": "applies"
+    }
+  ]
+}
