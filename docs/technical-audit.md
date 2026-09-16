@@ -103,6 +103,8 @@ raw response body 只可在同一次进程内以有界、不可枚举字段供�
 
 robots parser 根据明确 User-Agent/path 评估 `Allow`/`Disallow`，支持 percent-normalization 与有界 wildcard 匹配。无法可靠获取或解析 robots policy 时 crawler fail closed。`robots.txt` 是抓取指令，不是索引、排名、Google AI feature 或引用保证；`Google-Extended` 也不是 Google Search 排名/索引开关。
 
+默认 crawler identity 刻意拆成两个配置字段：`user_agent` 是实际发送的完整 HTTP identification string（默认 `SearchGrowthOS/0.2.0 (...)`），`robots_product_token` 是仅用于 REP group selection 的精确 product token（默认 `SearchGrowthOS`）。更改 `user_agent` 不会隐式推导或更改 robots 身份；程序化调用若要使用自定义身份，必须显式设置 `robots_product_token`。该 token 必须是 1–512 个 ASCII 字母、下划线或连字符；包含版本斜杠、空格、括号或注释的完整 HTTP User-Agent 会在任何 adapter 请求发出前被拒绝。直接 URL 与每个 redirect target 都使用同一个 product token 重新评估 robots policy。
+
 sitemap adapter 只遍历与目标 origin 相同的 sitemap。跨域 sitemap 声明或子 sitemap 会被拒绝/记录而不会获取；这可能与某些真实部署方式不同，是 Phase 2A 的安全限制。sitemap 中列出的 URL 是声明证据，不等于已抓取或已索引。
 
 crawler 只调度同源 URL，每个候选与 redirect target 都重新执行 robots policy。它只从成功取得的静态 HTML 扩展 frontier。sitemap URL 未在本次有界 crawl 中出现时，只能形成范围受限、低置信度的 orphan candidate，不能断言绝对 orphan。

@@ -186,6 +186,35 @@ test("standalone commands preserve a failing primary adapter status", async () =
   assert.equal(audit.summary.status, "blocked");
 });
 
+test("robots product token is explicit and validated independently of the HTTP User-Agent", async () => {
+  let adapterCalls = 0;
+  const run = createAuditRunner({
+    clock: () => new Date(timestamp),
+    createRunId: () => "run-custom-identity",
+    robots: async (_target, {configuration}) => {
+      adapterCalls += 1;
+      assert.equal(configuration.user_agent, "ExampleCrawler/1.0 (+https://example.com/bot)");
+      assert.equal(configuration.robots_product_token, "ExampleCrawler");
+      return result("robots", {evaluations: []});
+    },
+  });
+
+  const audit = await run("robots", "https://example.com/", {
+    user_agent: "ExampleCrawler/1.0 (+https://example.com/bot)",
+    robots_product_token: "ExampleCrawler",
+  });
+  assert.equal(audit.summary.status, "ok");
+  assert.equal(adapterCalls, 1);
+
+  await assert.rejects(
+    run("robots", "https://example.com/", {
+      robots_product_token: "ExampleCrawler/1.0",
+    }),
+    /robots_product_token must be 1-512 ASCII letters, underscores, or hyphens/u,
+  );
+  assert.equal(adapterCalls, 1);
+});
+
 test("Audit Run caps amplified findings and records the truncation", async () => {
   const pages = Array.from({length: 600}, (_, index) => ({
     url: `https://example.com/missing-${index}`,

@@ -92,7 +92,7 @@ HTTP adapter 记录请求 URL、最终 URL、redirect chain、状态、耗时、
 - 单响应最多 5 MiB；每个 Audit Run 共享最多 1,500 个请求、64 MiB 响应数据和 5 分钟 wall-clock 预算。
 - robots body 最多 512 KiB；sitemap 最多 100 个文档、5 层、100,000 个 URL 和 16 MiB URL 字符串，且只遍历与目标同源的 sitemap。
 - crawler 最多 1,000 页、并发 10、每页 500 个链接，同时限制为 50,000 个发现项和 8 MiB 保留链接字符串。
-- crawler 使用明确的 User-Agent、只调度同源链接并执行 robots 规则；无法可靠取得 robots 规则时不会继续 crawl。
+- crawler 的 HTTP 请求使用完整、可识别的 User-Agent，而 robots group selection 使用独立的精确 product token；只调度同源链接并对候选和跳转目标执行 robots 规则，无法可靠取得规则时不会继续 crawl。
 - 不登录，不绕过认证、WAF、CAPTCHA、paywall 或 anti-bot controls，不使用 stealth browser，不修改目标网站。
 - URL userinfo 和常见敏感 query 参数会在可序列化记录中净化；调用者仍不应把 secret、token、客户 PII 或其他敏感信息放进目标 URL。
 

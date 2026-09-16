@@ -5,6 +5,7 @@ import {
   createHttpAdapter,
   nodeHttpTransport,
 } from "../lib/http/http-adapter.mjs";
+import { DEFAULT_AUDIT_CONFIGURATION } from "../lib/audit/audit-run.mjs";
 import { createDefaultAuditRunner } from "../lib/audit/default-runner.mjs";
 import { startFixtureServer } from "./helpers/fixture-server.mjs";
 
@@ -87,6 +88,7 @@ test("real local fixture server exercises the full technical audit without publi
     transportCalls.push({
       url: request.url.href,
       pinned: request.pinnedAddresses,
+      userAgent: request.headers["user-agent"],
     });
     const mapped = new URL(`${request.url.pathname}${request.url.search}`, fixture.origin);
     return nodeHttpTransport({
@@ -128,4 +130,116 @@ test("real local fixture server exercises the full technical audit without publi
   assert.ok(
     transportCalls.every(({ pinned }) => pinned[0].address === "93.184.216.34"),
   );
+  assert.ok(transportCalls.every(
+    ({ userAgent }) => userAgent === DEFAULT_AUDIT_CONFIGURATION.user_agent,
+  ));
+});
+
+test("default crawl uses an exact robots product token while retaining its HTTP identity", async (t) => {
+  const fixture = await startFixtureServer({
+    "/robots.txt": {
+      headers: { "content-type": "text/plain" },
+      body: [
+        "User-agent: SearchGrowthOS",
+        "Disallow: /private",
+        "",
+        "User-agent: *",
+        "Allow: /",
+      ].join("\n"),
+    },
+    "/": {
+      headers: { "content-type": "text/html" },
+      body: [
+        "<title>Robots identity fixture</title>",
+        '<a href="/private">Private</a>',
+        '<a href="/public">Public</a>',
+        '<a href="/redirect-private">Redirect private</a>',
+      ].join(""),
+    },
+    "/public": {
+      headers: { "content-type": "text/html" },
+      body: "<title>Public</title>",
+    },
+    "/redirect-private": {
+      status: 302,
+      headers: { location: "/private", "content-type": "text/plain" },
+    },
+    "/private": {
+      status: 500,
+      headers: { "content-type": "text/plain" },
+      body: "This route must never be requested",
+    },
+  });
+  t.after(fixture.close);
+
+  const transportCalls = [];
+  const transport = async (request) => {
+    transportCalls.push({
+      path: request.url.pathname,
+      userAgent: request.headers["user-agent"],
+    });
+    const mapped = new URL(`${request.url.pathname}${request.url.search}`, fixture.origin);
+    return nodeHttpTransport({
+      ...request,
+      url: mapped,
+      lookup: localLookup,
+      headers: { ...request.headers, host: request.url.host },
+    });
+  };
+  const run = createDefaultAuditRunner({
+    httpAdapter: createHttpAdapter({
+      transport,
+      dnsLookup: PUBLIC_DNS,
+      now: () => new Date(FIXED_TIME),
+    }),
+    clock: () => new Date(FIXED_TIME),
+    createRunId: () => "robots-product-token-run",
+  });
+
+  const audit = await run("crawl", "https://public.example/", {
+    max_pages: 10,
+    concurrency: 1,
+  });
+  const crawler = audit.tool_results.find(({ id }) => id === "bounded-technical-crawler");
+
+  assert.equal(audit.configuration.robots_product_token, "SearchGrowthOS");
+  assert.match(audit.configuration.user_agent, /^SearchGrowthOS\/0\.2\.0 \(/u);
+  assert.notEqual(audit.configuration.user_agent, audit.configuration.robots_product_token);
+  assert.deepEqual(
+    transportCalls.map(({ path }) => path),
+    ["/robots.txt", "/", "/public", "/redirect-private"],
+  );
+  assert.ok(transportCalls.every(
+    ({ userAgent }) => userAgent === DEFAULT_AUDIT_CONFIGURATION.user_agent,
+  ));
+  assert.ok(crawler.output.pages.some(
+    ({ requested_url: url }) => url === "https://public.example/public",
+  ));
+  assert.ok(crawler.output.skipped.some(({ url, status, reason }) =>
+    url === "https://public.example/private" &&
+    status === "blocked" &&
+    reason === "matched_disallow"
+  ));
+  assert.ok(crawler.output.errors.some(({ url, status, stage }) =>
+    url === "https://public.example/redirect-private" &&
+    status === "blocked" &&
+    stage === "http"
+  ));
+  assert.equal(transportCalls.some(({ path }) => path === "/private"), false);
+
+  transportCalls.length = 0;
+  const customUserAgent = "ExampleCrawler/1.0 (+https://example.com/bot)";
+  const customHeaderAudit = await run("crawl", "https://public.example/", {
+    max_pages: 10,
+    concurrency: 1,
+    user_agent: customUserAgent,
+  });
+  assert.equal(customHeaderAudit.configuration.user_agent, customUserAgent);
+  assert.equal(customHeaderAudit.configuration.robots_product_token, "SearchGrowthOS");
+  assert.deepEqual(
+    transportCalls.map(({ path }) => path),
+    ["/robots.txt", "/", "/public", "/redirect-private"],
+  );
+  assert.ok(transportCalls.every(({ userAgent }) => userAgent === customUserAgent));
+  assert.equal(transportCalls.some(({ path }) => path === "/private"), false);
 });
